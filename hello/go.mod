@@ -1,4 +1,4 @@
-module example/hello
+module kopever.com/hello
 
 go 1.18
 
