@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -15,7 +15,8 @@ type Page struct {
 
 func (p *Page) save() error {
 	filename := p.Title + ".txt"
-	return os.WriteFile(filename, p.Body, 0600)
+	path, _ := filepath.Abs("./gowiki/" + filename)
+	return os.WriteFile(path, p.Body, 0600)
 }
 
 func loadPage(title string) (*Page, error) {
@@ -30,10 +31,54 @@ func loadPage(title string) (*Page, error) {
 
 func viewHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Path[len("/view/"):]
-	p, _ := loadPage(title)
-	fmt.Println(p.Title)
-	fmt.Println(p.Body)
-	fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
+	p, err := loadPage(title)
+	if err != nil {
+		//p = &Page{Title: title, Body: []byte("No content")}
+		http.Redirect(w, r, "/edit/"+title, http.StatusFound)
+		return
+	}
+	//fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
+
+	renderTemplate(w, "view", p)
+}
+
+func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
+	path, _ := filepath.Abs("gowiki/" + tmpl)
+	t, _ := template.ParseFiles(path + ".html")
+	t.Execute(w, p)
+}
+
+func editHandler(w http.ResponseWriter, r *http.Request) {
+	title := r.URL.Path[len("/edit/"):]
+	p, err := loadPage(title)
+	if err != nil {
+		p = &Page{
+			Title: title,
+		}
+	}
+	//fmt.Fprintf(w, "<h1>Editing %s</h1>"+
+	//	"<form action=\"/save/%s\" method=\"POST\">"+
+	//	"<textarea name=\"body\">%s</textarea><br>"+
+	//	"<input type=\"submit\" value=\"Save\">"+
+	//	"</form>",
+	//	p.Title, p.Title, p.Body)
+
+	//path, _ := filepath.Rel("", "gowiki/edit.html")
+	//t, _ := template.ParseFiles(path)
+	//t.Execute(w, p)
+
+	renderTemplate(w, "edit", p)
+}
+
+func saveHandler(w http.ResponseWriter, r *http.Request) {
+	title := r.URL.Path[len("/save/"):]
+	body := r.FormValue("body")
+	p := &Page{
+		Title: title,
+		Body:  []byte(body),
+	}
+	p.save()
+	http.Redirect(w, r, "/view/"+title, http.StatusFound)
 }
 
 func main() {
@@ -43,5 +88,7 @@ func main() {
 	//fmt.Println(string(p2.Body))
 
 	http.HandleFunc("/view/", viewHandler)
+	http.HandleFunc("/edit/", editHandler)
+	http.HandleFunc("/save/", saveHandler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
