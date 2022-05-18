@@ -42,18 +42,6 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "view", p)
 }
 
-func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
-	path, _ := filepath.Abs("gowiki/" + tmpl)
-	t, err := template.ParseFiles(path + ".html")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	err = t.Execute(w, p)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
 func editHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Path[len("/edit/"):]
 	p, err := loadPage(title)
@@ -88,6 +76,25 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	http.Redirect(w, r, "/view/"+title, http.StatusFound)
+}
+
+var templates = template.Must(template.ParseFiles("./gowiki/edit.html", "./gowiki/view.html"))
+
+func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
+	//path, _ := filepath.Abs("gowiki/" + tmpl)
+	//t, err := template.ParseFiles(path + ".html")
+	//if err != nil {
+	//	http.Error(w, err.Error(), http.StatusInternalServerError)
+	//}
+	//err = t.Execute(w, p)
+	//if err != nil {
+	//	http.Error(w, err.Error(), http.StatusInternalServerError)
+	//}
+
+	err := templates.ExecuteTemplate(w, tmpl+".html", p)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func main() {
