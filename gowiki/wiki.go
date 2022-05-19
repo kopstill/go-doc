@@ -17,13 +17,13 @@ type Page struct {
 
 func (p *Page) save() error {
 	filename := p.Title + ".txt"
-	path, _ := filepath.Abs("./gowiki/" + filename)
+	path, _ := filepath.Abs("./gowiki/data/" + filename)
 	return os.WriteFile(path, p.Body, 0600)
 }
 
 func loadPage(title string) (*Page, error) {
 	filename := title + ".txt"
-	path, _ := filepath.Abs("./gowiki/" + filename)
+	path, _ := filepath.Abs("./gowiki/data/" + filename)
 	body, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -113,7 +113,7 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.Handl
 	}
 }
 
-var templates = template.Must(template.ParseFiles("./gowiki/edit.html", "./gowiki/view.html"))
+var templates = template.Must(template.ParseFiles("./gowiki/tmpl/edit.html", "./gowiki/tmpl/view.html"))
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 	//path, _ := filepath.Abs("gowiki/" + tmpl)
