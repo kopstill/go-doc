@@ -33,7 +33,8 @@ func loadPage(title string) (*Page, error) {
 
 var validPath = regexp.MustCompile("^/(view|edit|save)/([a-zA-z\\d]+)$")
 
-func getTitle(w http.ResponseWriter, r *http.Request) (string, error) {
+// getTitle
+func _(w http.ResponseWriter, r *http.Request) (string, error) {
 	m := validPath.FindStringSubmatch(r.URL.Path)
 	if m == nil {
 		http.NotFound(w, r)
@@ -58,7 +59,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
 	renderTemplate(w, "view", p)
 }
 
-func editHandler(w http.ResponseWriter, r *http.Request, title string) {
+func editHandler(w http.ResponseWriter, _ *http.Request, title string) {
 	//title, err := getTitle(w, r)
 	//if err != nil {
 	//	return
@@ -132,12 +133,24 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 	}
 }
 
+func indexHandler(w http.ResponseWriter, _ *http.Request) {
+	//files, _ := template.ParseFiles("./gowiki/page/index.html")
+	//files.Execute(w, nil)
+
+	file, _ := os.ReadFile("./gowiki/page/index.html")
+	_, err := w.Write(file)
+	if err != nil {
+		http.Error(w, "error", http.StatusInternalServerError)
+	}
+}
+
 func main() {
 	//p1 := Page{"TestPage", []byte("This is a sample Page.")}
 	//p1.save()
 	//p2, _ := loadPage("TestPage")
 	//fmt.Println(string(p2.Body))
 
+	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/view/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
