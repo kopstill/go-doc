@@ -133,9 +133,14 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 	}
 }
 
-func indexHandler(w http.ResponseWriter, _ *http.Request) {
+func indexHandler(w http.ResponseWriter, r *http.Request) {
 	//files, _ := template.ParseFiles("./gowiki/page/index.html")
 	//files.Execute(w, nil)
+
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
 
 	file, _ := os.ReadFile("./gowiki/page/index.html")
 	_, err := w.Write(file)
